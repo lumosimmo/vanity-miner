@@ -105,4 +105,21 @@ mod tests {
             deployer, salt
         );
     }
+
+    #[test]
+    fn test_create2_address() {
+        let deployer = address!("5c69bee701ef814a2b6a3edd4b1652cb9cc5aa6f");
+        let salt = b256!("920b2e81714aa97e44cbc35ae7973d6f38174ad52bca3133ff1b7f4ccd725d69");
+        let init_code_hash =
+            b256!("96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f");
+
+        let computed_address = create2_address(deployer, salt, init_code_hash);
+        let expected_address = address!("4d5b55ae12922cd1f53a8593507a491723c01e00");
+
+        assert_eq!(
+            computed_address, expected_address,
+            "CREATE2 address computation mismatch for deployer {} with salt {}",
+            deployer, salt
+        );
+    }
 }
