@@ -72,7 +72,7 @@ mod tests {
     use alloy_primitives::{address, b256};
 
     #[test]
-    fn test_compute_address_no_protection() {
+    fn test_create3_address_no_protection() {
         let deployer = address!("ba5ed099633d3b313e4d5f7bdc1305d3c28ba5ed");
         let salt = b256!("0000000000000000000000000000000000000000000000000000000000000001");
 
