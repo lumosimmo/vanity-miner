@@ -2,6 +2,13 @@
 name = "vanity-miner"
 version = "0.1.0"
 edition = "2024"
+authors = ["lumo <lumosan@proton.me>"]
+description = "A blazing-fast, minimalistic vanity address miner for smart contract deployment, optimized for portability, perfect for client-side just-in-time (JIT) address mining."
+license = "GPL-2.0-or-later"
+repository = "https://github.com/lumosimmo/vanity-miner"
+homepage = "https://github.com/lumosimmo/vanity-miner"
+keywords = ["ethereum", "vanity", "address", "mining", "wasm"]
+categories = ["cryptography::cryptocurrencies", "wasm"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]
