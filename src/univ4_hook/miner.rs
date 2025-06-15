@@ -23,9 +23,8 @@ pub fn mine_v4_hook_salt(config: &V4HookConfig) -> V4HookResult {
         seed: config.seed,
     };
     let suffix = config.permissions.to_suffix();
-    let results = mine_create2_salt_with_suffix(&create2_config, &suffix);
 
-    return results;
+    mine_create2_salt_with_suffix(&create2_config, &suffix)
 }
 
 // WASM wrapper functions

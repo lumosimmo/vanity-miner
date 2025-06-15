@@ -23,7 +23,7 @@ pub fn mine_create2_salt(
     predicate: &dyn Fn(Address) -> bool,
 ) -> Create2Result {
     let seed = config.seed.unwrap_or(DEFAULT_SEED).to_be_bytes();
-    let mut salt = B256::from(keccak256(&seed).0);
+    let mut salt = B256::from(keccak256(seed).0);
     let mut results = Vec::new();
 
     let mut total_iterations = 0;

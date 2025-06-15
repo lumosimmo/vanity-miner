@@ -53,7 +53,7 @@ pub fn create3_address(deployer: Address, guarded_salt: B256) -> Address {
     proxy_preimage[1..21].copy_from_slice(deployer.as_slice());
     proxy_preimage[21..53].copy_from_slice(guarded_salt.as_slice());
     proxy_preimage[53..85].copy_from_slice(proxy_init_code_hash.as_slice());
-    let proxy_address_hash = keccak256(&proxy_preimage);
+    let proxy_address_hash = keccak256(proxy_preimage);
     let proxy_address = Address::from_slice(&proxy_address_hash[12..]);
 
     // 1 (0xd6) + 1 (0x94) + 20 (proxy_addr) + 1 (0x01)
@@ -62,7 +62,7 @@ pub fn create3_address(deployer: Address, guarded_salt: B256) -> Address {
     final_preimage[1] = 0x94;
     final_preimage[2..22].copy_from_slice(proxy_address.as_slice());
     final_preimage[22] = 0x01;
-    let final_address_hash = keccak256(&final_preimage);
+    let final_address_hash = keccak256(final_preimage);
     Address::from_slice(&final_address_hash[12..])
 }
 
@@ -75,7 +75,7 @@ pub fn create2_address(deployer: Address, salt: B256, init_code_hash: B256) -> A
     preimage[21..53].copy_from_slice(salt.as_slice());
     preimage[53..85].copy_from_slice(init_code_hash.as_slice());
 
-    let hash = keccak256(&preimage);
+    let hash = keccak256(preimage);
 
     Address::from_slice(&hash[12..])
 }
