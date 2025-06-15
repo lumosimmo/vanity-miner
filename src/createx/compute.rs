@@ -66,6 +66,20 @@ pub fn create3_address(deployer: Address, guarded_salt: B256) -> Address {
     Address::from_slice(&final_address_hash[12..])
 }
 
+/// Computes a CREATE2 address from a deployer address, salt, and init code hash.
+pub fn create2_address(deployer: Address, salt: B256, init_code_hash: B256) -> Address {
+    // 1 (0xff) + 20 (deployer) + 32 (salt) + 32 (init_code_hash) = 85 bytes
+    let mut preimage = [0u8; 85];
+    preimage[0] = 0xff;
+    preimage[1..21].copy_from_slice(deployer.as_slice());
+    preimage[21..53].copy_from_slice(salt.as_slice());
+    preimage[53..85].copy_from_slice(init_code_hash.as_slice());
+
+    let hash = keccak256(&preimage);
+
+    Address::from_slice(&hash[12..])
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

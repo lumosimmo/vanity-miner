@@ -1,12 +1,87 @@
 use crate::createx::compute;
-use crate::createx::config::{Create3Config, Create3Match, Create3Result};
-use alloy_primitives::{Address, B256};
+use crate::createx::config::{
+    Create2Config, Create2Match, Create2Result, Create3Config, Create3Match, Create3Result,
+};
+use alloy_primitives::{Address, B256, keccak256};
 #[cfg(target_arch = "wasm32")]
 use serde_wasm_bindgen::{from_value, to_value};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
 const DEFAULT_SEED: u128 = 1337;
+
+/// Mines for a salt that produces a CREATE2 address satisfying the given predicate.
+///
+/// ## Arguments
+/// * `config` - A `Create2Config` struct defining the mining parameters.
+/// * `predicate` - A closure that returns true if the computed address is the desired one.
+///
+/// ## Returns
+/// A `Create2Result` containing the found salts/addresses and total iterations.
+pub fn mine_create2_salt(
+    config: &Create2Config,
+    predicate: &dyn Fn(Address) -> bool,
+) -> Create2Result {
+    let seed = config.seed.unwrap_or(DEFAULT_SEED).to_be_bytes();
+    let mut salt = B256::from(keccak256(&seed).0);
+    let mut results = Vec::new();
+
+    let mut total_iterations = 0;
+
+    for i in 0..config.max_iterations {
+        total_iterations = (i + 1) as usize;
+        increment_b256_in_place(&mut salt);
+
+        let computed_address =
+            compute::create2_address(config.deployer, salt, config.init_code_hash);
+
+        if predicate(computed_address) {
+            results.push(Create2Match {
+                salt,
+                computed_address,
+            });
+
+            if results.len() >= config.max_results as usize {
+                break;
+            }
+        }
+    }
+
+    Create2Result {
+        results,
+        total_iterations,
+    }
+}
+
+/// Mines for a salt that produces a CREATE2 address with a specific prefix.
+pub fn mine_create2_salt_with_prefix(config: &Create2Config, prefix: &[u8]) -> Create2Result {
+    if prefix.len() > 20 {
+        panic!("Prefix cannot be longer than 20 bytes");
+    }
+    let predicate = |addr: Address| addr.starts_with(prefix);
+    mine_create2_salt(config, &predicate)
+}
+
+/// Mines for a salt that produces a CREATE2 address with a specific suffix.
+pub fn mine_create2_salt_with_suffix(config: &Create2Config, suffix: &[u8]) -> Create2Result {
+    if suffix.len() > 20 {
+        panic!("Suffix cannot be longer than 20 bytes");
+    }
+    let predicate = |addr: Address| addr.ends_with(suffix);
+    mine_create2_salt(config, &predicate)
+}
+
+/// Mines for a salt that produces a CREATE2 address containing a specific byte sequence.
+pub fn mine_create2_salt_with_contains(config: &Create2Config, contains: &[u8]) -> Create2Result {
+    if contains.len() > 20 {
+        panic!("Contained sequence cannot be longer than 20 bytes");
+    }
+    let predicate = |addr: Address| {
+        addr.windows(contains.len())
+            .any(|window| window == contains)
+    };
+    mine_create2_salt(config, &predicate)
+}
 
 /// Mines for a salt that produces a CREATE3 address satisfying the given predicate.
 ///
@@ -15,7 +90,7 @@ const DEFAULT_SEED: u128 = 1337;
 /// * `predicate` - A closure that returns true if the computed address is the desired one.
 ///
 /// ## Returns
-/// A `MiningResult` containing the found salts/addresses and total iterations.
+/// A `Create3Result` containing the found salts/addresses and total iterations.
 pub fn mine_create3_salt(
     config: &Create3Config,
     predicate: &dyn Fn(Address) -> bool,
@@ -97,6 +172,16 @@ pub fn mine_create3_salt_with_contains(config: &Create3Config, contains: &[u8]) 
     mine_create3_salt(config, &predicate)
 }
 
+fn increment_b256_in_place(bytes: &mut B256) {
+    for byte in bytes.iter_mut().rev() {
+        let (result, carry) = byte.overflowing_add(1);
+        *byte = result;
+        if !carry {
+            return;
+        }
+    }
+}
+
 // WASM wrapper functions
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
@@ -137,6 +222,45 @@ pub fn wasm_mine_create3_salt_with_contains(
     to_value(&mining_result).map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn wasm_mine_create2_salt_with_prefix(
+    config: JsValue,
+    prefix: &[u8],
+) -> Result<JsValue, JsValue> {
+    let config: Create2Config =
+        from_value(config).map_err(|e| JsValue::from_str(&e.to_string()))?;
+
+    let mining_result = mine_create2_salt_with_prefix(&config, prefix);
+    to_value(&mining_result).map_err(|e| JsValue::from_str(&e.to_string()))
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn wasm_mine_create2_salt_with_suffix(
+    config: JsValue,
+    suffix: &[u8],
+) -> Result<JsValue, JsValue> {
+    let config: Create2Config =
+        from_value(config).map_err(|e| JsValue::from_str(&e.to_string()))?;
+
+    let mining_result = mine_create2_salt_with_suffix(&config, suffix);
+    to_value(&mining_result).map_err(|e| JsValue::from_str(&e.to_string()))
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn wasm_mine_create2_salt_with_contains(
+    config: JsValue,
+    contains: &[u8],
+) -> Result<JsValue, JsValue> {
+    let config: Create2Config =
+        from_value(config).map_err(|e| JsValue::from_str(&e.to_string()))?;
+
+    let mining_result = mine_create2_salt_with_contains(&config, contains);
+    to_value(&mining_result).map_err(|e| JsValue::from_str(&e.to_string()))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -148,7 +272,7 @@ mod tests {
     const CALLER: Address = address!("DeaDbeefdEAdbeefdEadbEEFdeadbeEFdEaDbeeF");
 
     #[test]
-    fn test_mine_for_leading_zeros() {
+    fn test_mine_create3_for_leading_zeros() {
         let chain_id = 130u64;
 
         let config = Create3Config {
@@ -198,7 +322,7 @@ mod tests {
     }
 
     #[test]
-    fn test_mine_for_specific_suffix() {
+    fn test_mine_create3_for_specific_suffix() {
         let config = Create3Config {
             deployer: DEPLOYER,
             caller: None,
@@ -234,7 +358,7 @@ mod tests {
     }
 
     #[test]
-    fn test_mine_for_specific_prefix_and_chain_id() {
+    fn test_mine_create3_for_specific_prefix_and_chain_id() {
         let chain_id: u64 = 130;
 
         let config = Create3Config {
@@ -285,7 +409,7 @@ mod tests {
     }
 
     #[test]
-    fn test_mine_for_contains() {
+    fn test_mine_create3_for_contains() {
         let config = Create3Config {
             deployer: DEPLOYER,
             caller: None,
@@ -324,7 +448,7 @@ mod tests {
     }
 
     #[test]
-    fn test_mine_multiple_results() {
+    fn test_mine_create3_multiple_results() {
         let config = Create3Config {
             deployer: DEPLOYER,
             caller: None,
