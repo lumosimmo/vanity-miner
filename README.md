@@ -15,6 +15,7 @@ The following use-cases are supported:
 - **CREATE2**: Direct CREATE2 address with prefix/suffix/contains patterns
 - **CREATE3**: CREATE3 address deployed via [CreateX](https://github.com/pcaversaccio/createx/)
 - **Uniswap V4 Hooks**: Uniswap V4 hook address with permission flags
+- **EulerSwap**: EulerSwap address with pool parameters
 
 ## Performance
 
@@ -64,6 +65,8 @@ Available for:
 
 The Uniswap V4 hook mining function is a wrapper around the `mine_create2_salt_with_suffix` function, with the suffix defined by the permission flags.
 
+The EulerSwap mining function is a wrapper around the Uniswap V4 hook mining function.
+
 All public functions are also available in WASM as `wasm_mine_*`.
 
 ### Configuration Structures
@@ -71,6 +74,7 @@ All public functions are also available in WASM as `wasm_mine_*`.
 - `Create2Config` - Configuration for CREATE2 mining
 - `Create3Config` - Configuration for CREATE3 mining (via CreateX)
 - `V4HookConfig` - Configuration for Uniswap V4 hook address mining
+- `EulerSwapConfig` - Configuration for EulerSwap address mining
 
 All configurations support:
 
