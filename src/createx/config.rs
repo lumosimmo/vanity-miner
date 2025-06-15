@@ -44,7 +44,7 @@ pub struct Create3Match {
     pub computed_address: Address,
 }
 
-/// Result structure that includes matches and total iterations.
+/// Result structure that includes Create3 matches and total iterations.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Create3Result {
     /// The found matches.
@@ -93,7 +93,7 @@ pub struct Create2Match {
     pub computed_address: Address,
 }
 
-/// Result structure that includes matches and total iterations.
+/// Result structure that includes Create2 matches and total iterations.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Create2Result {
     /// The found matches.
