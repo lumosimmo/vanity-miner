@@ -1,4 +1,5 @@
 pub mod createx;
+pub mod eulerswap;
 pub mod univ4_hook;
 
 #[cfg(target_arch = "wasm32")]
