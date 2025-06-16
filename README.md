@@ -19,7 +19,15 @@ The following use-cases are supported:
 
 ## Performance
 
-Finding a 4-character hex prefix typically takes less than a second, even in a browser.
+On an iPhone 16 base model, the miner achieves approximately 1.06 million iterations per second (in-browser WASM). Expected mining times:
+
+| Pattern Match          | Probability     | Expected Iterations | Estimated Time |
+| ---------------------- | --------------- | ------------------- | -------------- |
+| 2 characters (1 byte)  | 1 in 256        | 256                 | < 1 ms         |
+| 4 characters (2 bytes) | 1 in 65,536     | 65,536              | ~62 ms         |
+| 6 characters (3 bytes) | 1 in 16,777,216 | 16,777,216          | ~16 seconds    |
+
+_Note: These are statistical averages based on my testing. Actual mining time may vary due to the probabilistic nature of the process._
 
 ## Tradeoffs
 
