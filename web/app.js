@@ -28,11 +28,15 @@ function hexToBytes(hex) {
 function parseSeed(seedInput) {
   if (!seedInput) return null;
 
-  const seed = seedInput.startsWith("0x")
-    ? parseInt(seedInput, 16)
-    : parseInt(seedInput, 10);
-
-  return isNaN(seed) ? false : seed;
+  try {
+    const seed = BigInt(seedInput);
+    if (seed < 0n || seed > 2n ** 128n - 1n) {
+      return false;
+    }
+    return seed.toString();
+  } catch (error) {
+    return false;
+  }
 }
 
 function getInputValue(id) {
